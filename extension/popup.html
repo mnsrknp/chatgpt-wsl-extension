@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT WSL Terminal</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 17px;
+    }
+
+    p {
+      color: #9ca3af;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    button {
+      width: 100%;
+      padding: 11px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 7px;
+      background: #10a37f;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 6px;
+      background: #1f2937;
+      font-size: 12px;
+    }
+
+    #settings {
+      margin-top: 12px;
+      border-radius: 7px;
+      background: #1f2937;
+      overflow: hidden;
+    }
+
+    #settings-toggle {
+      width: 100%;
+      margin: 0;
+      padding: 10px;
+      border-radius: 0;
+      background: transparent;
+      color: #f9fafb;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    #settings-content {
+      padding: 0 10px 10px;
+    }
+
+    .setting-label {
+      display: block;
+      margin: 8px 0 5px;
+      color: #d1d5db;
+      font-size: 12px;
+    }
+
+    .setting-input,
+    .setting-select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      border: 1px solid #374151;
+      border-radius: 5px;
+      background: #111827;
+      color: #f9fafb;
+      font-size: 12px;
+    }
+
+    #saveSettings {
+      margin-top: 10px;
+      padding: 9px;
+      background: #374151;
+    }
+
+    #openPanel {
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h2>ChatGPT WSL Terminal</h2>
+
+  <p>
+    Local terminal integration for your ChatGPT development workflow.
+  </p>
+
+  <div id="status">WSL connection not configured</div>
+
+  <div id="settings">
+    <button id="settings-toggle" type="button">⚙ Settings</button>
+
+    <div id="settings-content" hidden>
+      <label class="setting-label" for="setting-cwd">
+        Working directory
+      </label>
+      <input
+        id="setting-cwd"
+        class="setting-input"
+        type="text"
+        value="."
+        maxlength="1024"
+      >
+
+      <label class="setting-label" for="setting-timeout">
+        Timeout
+      </label>
+      <select id="setting-timeout" class="setting-select">
+        <option value="15000">15 seconds</option>
+        <option value="30000">30 seconds</option>
+        <option value="60000" selected>60 seconds</option>
+        <option value="90000">90 seconds</option>
+        <option value="120000">120 seconds</option>
+      </select>
+
+      <button id="saveSettings" type="button">Save Settings</button>
+    </div>
+  </div>
+
+  <button id="openPanel">Open Terminal Panel</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

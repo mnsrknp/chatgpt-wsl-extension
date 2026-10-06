@@ -1,0 +1,70 @@
+<div id="cwsl-panel">
+  <div class="cwsl-header">
+    <strong>WSL Workspace</strong>
+
+    <div class="cwsl-header-actions">
+      <button
+        id="cwsl-minimize"
+        type="button"
+        title="Minimize panel"
+        aria-label="Minimize panel"
+      >−</button>
+
+      <button
+        id="cwsl-close"
+        type="button"
+        title="Close panel"
+        aria-label="Close panel"
+      >×</button>
+    </div>
+  </div>
+
+  <div class="cwsl-status">
+    <span class="cwsl-dot"></span>
+    <span id="cwsl-status-text">WSL not connected</span>
+  </div>
+
+  <div class="cwsl-connection">
+    <button id="cwsl-connect" type="button">
+      Connect to WSL
+    </button>
+  </div>
+
+  <div class="cwsl-shell-panel">
+    <div id="cwsl-command-group">
+      <label for="cwsl-command">Command</label>
+
+      <textarea
+        id="cwsl-command"
+        rows="5"
+        maxlength="4096"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="e.g. python -m pytest -q"
+      ></textarea>
+
+    <button id="cwsl-approve" type="button" disabled>
+      Approve and Run
+    </button>
+  </div>
+  </div>
+
+  <div class="cwsl-output-header">
+    <strong>Command Output</strong>
+    <button id="cwsl-clear" type="button">Clear</button>
+  </div>
+
+  <pre id="cwsl-output" aria-live="polite">Terminal interface initialized.
+Connect to WSL to begin.</pre>
+
+  <div class="cwsl-result-actions">
+    <button id="cwsl-insert-result" type="button" disabled>
+      Insert Result into ChatGPT
+    </button>
+  </div>
+
+  <div class="cwsl-footer">
+    <span>WSL shell execution</span>
+    <span>Approval required</span>
+  </div>
+</div>

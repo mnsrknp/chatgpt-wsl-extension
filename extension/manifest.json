@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT WSL Terminal",
+  "version": "0.2.0",
+  "description": "An approval-based local WSL terminal bridge for ChatGPT development workflows.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "ChatGPT WSL Terminal",
+    "default_popup": "popup.html"
+  }
+}

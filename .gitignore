@@ -1,0 +1,17 @@
+# Archived damaged Git metadata
+.git.corrupted-backup-*/
+
+# Recovery and temporary backups
+backups/
+**/backups/
+*.bak
+*.working-backup
+
+# Python generated files
+__pycache__/
+*.py[cod]
+
+# Environment files
+.env
+.env.*
+!.env.example
