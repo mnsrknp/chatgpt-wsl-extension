@@ -10,7 +10,6 @@ const WORKSPACE = fs.realpathSync(
 const MAX_FILE_SIZE = 256 * 1024;
 const MAX_OUTPUT_SIZE = 64 * 1024;
 const MAX_DIRECTORY_ENTRIES = 200;
-const MAX_COMMAND_LENGTH = 4096;
 const MIN_TIMEOUT_MS = 1000;
 const MAX_TIMEOUT_MS = 120000;
 
@@ -145,8 +144,8 @@ function executeShellCommand(request) {
 
   const command = request.command.trim();
 
-  if (!command || command.length > MAX_COMMAND_LENGTH) {
-    throw new Error("Command must contain 1–4096 characters.");
+  if (!command) {
+    throw new Error("Command must be non-empty.");
   }
 
   const cwd = resolveWorkspacePath(request.cwd ?? ".");

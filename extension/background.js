@@ -139,12 +139,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (operation.action === "execute") {
       if (
         typeof operation.command !== "string" ||
-        !operation.command.trim() ||
-        operation.command.length > 4096
+        !operation.command.trim()
       ) {
         sendResponse({
           ok: false,
-          error: "Command must contain 1–4096 characters."
+          error: "Command must be a non-empty string."
         });
         return false;
       }

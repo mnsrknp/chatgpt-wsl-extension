@@ -160,7 +160,6 @@ openButton.addEventListener("click", async () => {
           operation.action === "execute" &&
           typeof operation.command === "string" &&
           operation.command.length > 0 &&
-          operation.command.length <= 4096 &&
           typeof operation.cwd === "string" &&
           operation.cwd.length > 0 &&
           operation.cwd.length <= 1024 &&
@@ -192,7 +191,7 @@ openButton.addEventListener("click", async () => {
         const looksLikeShellCommand = (text) => {
           const command = normalizeDetectedCommand(text);
 
-          if (!command || command.length > 4096) {
+          if (!command) {
             return false;
           }
 
@@ -205,72 +204,142 @@ openButton.addEventListener("click", async () => {
             return false;
           }
 
-          return lines.every((line) =>
-            /^(?:cd|pwd|ls|find|grep|sed|awk|cat|printf|echo|git|npm|npx|node|python|python3|pip|pip3|pytest|docker|docker-compose|curl|wget|mkdir|cp|mv|rm|touch|chmod|chown|source|export|env|which|command|bash|sh|ssh|tar|unzip|zip|make|go|cargo|java|javac|php|ruby|perl|sudo)\b/.test(line) ||
-            /^(?:[A-Za-z_][A-Za-z0-9_]*=|[.\/]?\.\.?\/)/.test(line) ||
-            /(?:&&|\|\||[|<>])/.test(line)
-          );
+          const firstLine = lines[0];
+          return /^(cd|pwd|ls|find|grep|sed|awk|cat|printf|echo|git|npm|npx|node|python|python3|pip|pip3|pytest|docker|docker-compose|curl|wget|mkdir|cp|mv|rm|touch|chmod|chown|source|export|env|which|command|bash|sh|ssh|tar|unzip|zip|make|go|cargo|java|javac|php|ruby|perl|sudo|for|while|until|if|case|select|function|do|then|set|trap|read)\b/.test(firstLine) ||
+            /^(?:[A-Za-z_][A-Za-z0-9_]*=)/.test(firstLine) ||
+            firstLine.includes("&&") ||
+            firstLine.includes("||") ||
+            firstLine.includes("|") ||
+            firstLine.includes("<") ||
+            firstLine.startsWith("./") ||
+            firstLine.startsWith("../");
         };
 
-        const detectShellCommands = () => {
-          const assistantMessages = document.querySelectorAll(
+        const getLatestAssistantMessage = () => {
+          const selectors = [
+            '[data-message-author-role="assistant"]',
             '[data-markdown-text-style="assistant-message"]'
+          ];
+
+          const messages = new Set();
+          for (const selector of selectors) {
+            document.querySelectorAll(selector).forEach((message) => {
+              messages.add(message);
+            });
+          }
+
+          const ordered = Array.from(messages).filter((message) =>
+            message.querySelector("pre, code, [data-message-content]")
           );
 
-          for (const message of assistantMessages) {
-            const codeBlocks = message.querySelectorAll("pre code");
+          return ordered.length ? ordered[ordered.length - 1] : null;
+        };
 
-            for (const code of codeBlocks) {
-              const languageClass = Array.from(code.classList)
-                .find((name) => name.startsWith("language-"));
+        const isAssistantGenerating = () => Boolean(
+          document.querySelector(
+            'button[data-testid="stop-button"], button[aria-label*="Stop generating" i], button[aria-label*="Stop streaming" i], button[aria-label*="Stop response" i]'
+          )
+        );
 
-              const language = languageClass
-                ? languageClass.slice("language-".length).toLowerCase()
-                : "";
+        const detectShellCommands = (message) => {
+          if (!message) return;
 
-              const command = normalizeDetectedCommand(code.textContent || "");
+          const codeBlocks = message.querySelectorAll("pre code, pre");
 
-              if (
-                !command ||
-                detectedCommands.has(command) ||
-                (!SHELL_LANGUAGES.has(language) && !looksLikeShellCommand(command))
-              ) {
-                continue;
-              }
+          for (const code of codeBlocks) {
+            const languageClass = Array.from(code.classList)
+              .find((name) => name.startsWith("language-"));
 
-              detectedCommands.add(command);
-              commandInput.value = command;
-              updateApproval();
+            const language = languageClass
+              ? languageClass.slice("language-".length).toLowerCase()
+              : "";
 
-              setStatus(
-                "Shell command detected — review before approval",
-                "#eab308"
-              );
+            const command = normalizeDetectedCommand(code.textContent || "");
 
-              setOutput(
-                "Detected a shell command in the latest ChatGPT response.\n\n" +
-                "The command has been placed in the approval field only.\n" +
-                "Nothing has been executed or sent automatically."
-              );
-
-              return;
+            if (
+              !command ||
+              detectedCommands.has(command) ||
+              (!SHELL_LANGUAGES.has(language) && !looksLikeShellCommand(command))
+            ) {
+              continue;
             }
+
+            detectedCommands.add(command);
+            commandInput.value = command;
+            updateApproval();
+
+            setStatus(
+              "Shell command detected — review before approval",
+              "#eab308"
+            );
+
+            setOutput(
+              "Detected a shell command in the latest completed ChatGPT response.\n\n" +
+              "The command has been placed in the approval field only.\n" +
+              "Nothing has been executed or sent automatically."
+            );
+
+            return;
           }
         };
 
         const startCommandDetection = () => {
-          detectShellCommands();
+          let detectionTimer = null;
+          let pendingMessage = null;
+          let pendingText = "";
+          let stopped = false;
+
+          const checkForCompletedResponse = () => {
+            if (stopped) return;
+
+            if (isAssistantGenerating()) {
+              pendingMessage = null;
+              pendingText = "";
+              return;
+            }
+
+            const message = getLatestAssistantMessage();
+            if (!message) return;
+
+            const currentText = message.textContent || "";
+
+            if (message !== pendingMessage || currentText !== pendingText) {
+              pendingMessage = message;
+              pendingText = currentText;
+              return;
+            }
+
+            detectShellCommands(message);
+          };
 
           const observer = new MutationObserver(() => {
-            detectShellCommands();
+            if (isAssistantGenerating()) {
+              pendingMessage = null;
+              pendingText = "";
+            } else {
+              checkForCompletedResponse();
+            }
           });
 
           observer.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
+            characterData: true
           });
 
-          return observer;
+          detectionTimer = setInterval(checkForCompletedResponse, 750);
+          checkForCompletedResponse();
+
+          return {
+            disconnect() {
+              stopped = true;
+              observer.disconnect();
+              if (detectionTimer !== null) {
+                clearInterval(detectionTimer);
+                detectionTimer = null;
+              }
+            }
+          };
         };
 
         const updateApproval = () => {
